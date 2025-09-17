@@ -6,16 +6,36 @@ from itertools import combinations
 # =============================
 # 1. JSON del supermercado
 # =============================
-supermercado_json = """ ... (tu JSON de antes aquí) ... """
+supermercado_json = """
+{
+  "entrada": "C0",
+  "nodos": {
+    "C0": ["C1"],
+    "C1": ["C0", "C2", "B1", "D1"],
+    "C2": ["C1", "C3", "B2", "D2"],
+    "C3": ["C2", "C4", "B3", "D3"],
+    "C4": ["C3", "B4", "D4"],
+    "B1": ["C1"], "D1": ["C1"],
+    "B2": ["C2"], "D2": ["C2"],
+    "B3": ["C3"], "D3": ["C3"],
+    "B4": ["C4"], "D4": ["C4"]
+  },
+  "estantes": {
+    "Latas": "D1",
+    "Preparados": "D2",
+    "Lacteos": "C4",
+    "Panaderia": "B4"
+  }
+}
+"""
 data = json.loads(supermercado_json)
 grafo = data["nodos"]
 estantes = data["estantes"]
 entrada = data["entrada"]
 
 # =============================
-# 2. Coordenadas
+# 2. Coordenadas de los nodos
 # =============================
-# Coordenadas de los nodos en el plano (X, Y)
 coordenadas = {
     "A4": (0, 4), "A3": (0, 3), "A2": (0, 2), "A1": (0, 1), "A0": (0, 0),
     "B4": (1, 4), "B3": (1, 3), "B2": (1, 2), "B1": (1, 1), "B0": (1, 0),
@@ -24,9 +44,8 @@ coordenadas = {
     "E4": (4, 4), "E3": (4, 3), "E2": (4, 2), "E1": (4, 1), "E0": (4, 0)
 }
 
-
 # =============================
-# 3. Dijkstra
+# 3. Dijkstra para caminos cortos
 # =============================
 def dijkstra_path(grafo, start, goal):
     dist = {n: float("inf") for n in grafo}
@@ -51,7 +70,7 @@ def dijkstra_path(grafo, start, goal):
     return list(reversed(path))
 
 # =============================
-# 4. Held-Karp TSP
+# 4. Held-Karp (TSP simplificado)
 # =============================
 def tsp_route(targets, grafo, entrada):
     dist, path_map = {}, {}
@@ -68,7 +87,6 @@ def tsp_route(targets, grafo, entrada):
         C[(1<<k, k)] = dist[(targets[0], targets[k])]
         parent[(1<<k, k)] = 0
 
-    from itertools import combinations
     for s in range(2, n-1):
         for subset in combinations(range(1,n-1), s):
             bits = sum(1<<bit for bit in subset)
@@ -108,7 +126,7 @@ def tsp_route(targets, grafo, entrada):
     return full_path, best_cost
 
 # =============================
-# 5. Dibujar ruta
+# 5. Dibujar la ruta
 # =============================
 def dibujar_ruta(ruta, lista_compra):
     fig, ax = plt.subplots(figsize=(6,6))
@@ -118,7 +136,7 @@ def dibujar_ruta(ruta, lista_compra):
                 x1,y1 = coordenadas[nodo]; x2,y2 = coordenadas[vecino]
                 ax.plot([x1,x2],[y1,y2],"lightgray",linestyle="--",zorder=1)
     for nodo,(x,y) in coordenadas.items():
-        if nodo in estantes:
+        if nodo in estantes.values():
             ax.scatter(x,y,c="orange",s=200,marker="s",zorder=2)
             ax.text(x,y+0.2,nodo,ha="center",fontsize=8)
         else:
